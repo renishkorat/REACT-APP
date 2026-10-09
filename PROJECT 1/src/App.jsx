@@ -1,37 +1,28 @@
-import { useEffect, useReducer, useState } from 'react'
 
-import Header from './components/Header'
-import DestinationExplorer from './components/DestinationExplorer'
-import MyTrip from './components/MyTrip'
-import TravelPreferences from './components/TravelPreferences'
+import { useEffect, useReducer, useState } from 'react';
 
-import destinations from "./data/destinations";
-import './App.css'
+import Header from './components/Header';
+import DestinationExplorer from './components/DestinationExplorer';
+import MyTrip from './components/MyTrip';
+import TravelPreferences from './components/TravelPreferences';
 
+import destinations from './data/destinations';
+import './App.css';
 
-//  REDUCER
+// REDUCER
 function tripreducer(state, action) {
   switch (action.type) {
-    case "ADD":
-      if (state.some(
-        (item) =>
-          item.id === action.payload.id
-      )
-      ) {
+    case 'ADD':
+      if (state.some((item) => item.id === action.payload.id)) {
         return state;
       }
-      return [
-        ...state,
-        action.payload
-      ];
 
-    case "REMOVE":
-      return state.filter(
-        (item) =>
-          item.id !== action.payload
-      );
+      return [...state, action.payload];
 
-    case "CLEAR":
+    case 'REMOVE':
+      return state.filter((item) => item.id !== action.payload);
+
+    case 'CLEAR':
       return [];
 
     default:
@@ -39,65 +30,61 @@ function tripreducer(state, action) {
   }
 }
 
-
 // LOAD TRIP
 function getSavedTrip() {
+  const savedTrip = localStorage.getItem('travelTrip');
 
-  const savedTrip =
-    localStorage.getItem("travelTrip");
-
-  return savedTrip
-    ? JSON.parse(savedTrip)
-    : []  
+  return savedTrip ? JSON.parse(savedTrip) : [];
 }
 
+// LOAD PREFERENCES
+function getSavedPreferences() {
+  const saved = localStorage.getItem('travelPreferences');
+
+  if (!saved) return [];
+
+  const parsed = JSON.parse(saved);
+
+  // Support old single-object preference data
+  if (Array.isArray(parsed)) {
+    return parsed;
+  }
+
+  if (parsed && parsed.name) {
+    return [{ ...parsed, id: Date.now() }];
+  }
+
+  return [];
+}
 
 function App() {
-  const [
-    trip,
-    dispatch
-  ] = useReducer(
+  const [trip, dispatch] = useReducer(
     tripreducer,
     [],
     getSavedTrip
   );
 
-  // PREFERENCES 
+  // PREFERENCES ARRAY
+  const [preferences, setPreferences] = useState(
+    getSavedPreferences
+  );
 
-  const [
-    preferences,
-    setPreferences
-  ] = useState(() => {
-
-    const saved =
-      localStorage.getItem("travelPreferences");
-
-    return saved
-      ? JSON.parse(saved)
-      : {
-        name: "",
-        travelType: "Solo",
-        budget: "Budget",
-        preferredDestination: ""
-      };
-  });
-
-  //  SAVE TRIP
-
+  // SAVE TRIP
   useEffect(() => {
-    localStorage.setItem("travelTrip", JSON.stringify(trip));
-  }, [trip])
+    localStorage.setItem('travelTrip', JSON.stringify(trip));
+  }, [trip]);
 
   // SAVE PREFERENCES
-
   useEffect(() => {
-    localStorage.setItem("travelPreferences", JSON.stringify(preferences));
-  }, [preferences])
-
+    localStorage.setItem(
+      'travelPreferences',
+      JSON.stringify(preferences)
+    );
+  }, [preferences]);
 
   function addDestination(destination) {
     dispatch({
-      type: "ADD",
+      type: 'ADD',
       payload: destination
     });
   }
@@ -107,16 +94,15 @@ function App() {
 
       <Header />
 
-
       <main>
-        <div className="  w-[90%] mx-auto -mt-[75px]
-                relative
-                z-10
-                pb-10">
-        <DestinationExplorer
-          destinations={destinations}
-          onAdd={addDestination}
-        />
+        <div
+          className="w-[90%] mx-auto -mt-[75px]
+          relative z-10 pb-10"
+        >
+          <DestinationExplorer
+            destinations={destinations}
+            onAdd={addDestination}
+          />
         </div>
 
         <MyTrip
@@ -124,42 +110,34 @@ function App() {
           dispatch={dispatch}
         />
 
-        <TravelPreferences
-                    destinations={destinations}
-                    preferences={preferences}
-                    setPreferences={setPreferences}
-                />
-
+        <div className="w-[90%] mx-auto">
+          <TravelPreferences
+            destinations={destinations}
+            preferences={preferences}
+            setPreferences={setPreferences}
+          />
+        </div>
       </main>
 
-        <footer className='                
-        text-center
-                px-5
-                py-10
-                text-slate-300
-                bg-[linear-gradient(135deg,#0f172a,#1e293b,#312e81)]
-'>
+      <footer
+        className="text-center px-5 py-10 text-slate-300
+        bg-[linear-gradient(135deg,#0f172a,#1e293b,#312e81)]"
+      >
+        <h3
+          className="font-serif text-[23px] text-white
+          font-semibold mb-2"
+        >
+          ✈️ Travel Planner
+        </h3>
 
-                <h3 className='font-serif
-                    text-[23px]
-                    text-white
-                    font-semibold
-                    mb-2'>
-                    ✈️ Travel Planner
-                </h3>
+        <p className="text-sm text-slate-400 mb-2">
+          Plan • Explore • Travel
+        </p>
 
-                <p className=' text-sm
-                    text-slate-400
-                    mb-2'>
-                    Plan • Explore • Travel
-                </p>
-
-                <small className='text-[11px]
-                    text-slate-500'>
-                    © 2026 Travel Planner
-                </small>
-
-            </footer>
+        <small className="text-[11px] text-slate-500">
+          © 2026 Travel Planner
+        </small>
+      </footer>
     </div>
   );
 }
